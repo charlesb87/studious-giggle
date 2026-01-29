@@ -1,0 +1,79 @@
+---
+# roles/sinequa/tasks/upgrade.yml
+
+# ------------------------------------------------------------------
+# Guardrails
+# ------------------------------------------------------------------
+
+- name: Fail if Sinequa is not installed
+  ansible.builtin.fail:
+    msg: "Upgrade requested but Sinequa is not installed."
+  when: not sinequa_installed
+
+- name: Fail if installed version is newer than target version
+  ansible.builtin.fail:
+    msg: >-
+      Installed version ({{ sinequa_current_version }})
+      is newer than target version ({{ sinequa_version }}).
+  when:
+    - sinequa_current_version | length > 0
+    - sinequa_current_version is version(sinequa_version, '>')
+
+# ------------------------------------------------------------------
+# Stop services
+# ------------------------------------------------------------------
+
+- name: Stop Sinequa service
+  ansible.windows.win_service:
+    name: "{{ sinequa_service_name }}"
+    state: stopped
+    start_mode: manual
+
+# ------------------------------------------------------------------
+# Wait for processes to exit
+# ------------------------------------------------------------------
+
+- name: Wait up to 300 seconds for all Sinequa processes to stop
+  community.windows.win_wait_for_process:
+    process_name_pattern: '^sinequa\..*$'
+    state: absent
+    timeout: 300
+  when: sinequa_installed
+
+# ------------------------------------------------------------------
+# Clean-up
+# ------------------------------------------------------------------
+
+- name: Remove Sinequa Install root folder
+  ansible.windows.win_file:
+    path: "{{ sinequa_install_root }}"
+    state: absent
+  when: sinequa_installed
+
+# ------------------------------------------------------------------
+# Deploy new binaries
+# ------------------------------------------------------------------
+
+- name: Extract archive
+  ansible.windows.win_command: >
+    7z.exe x "{{ temp_folder }}sinequa.zip" -o"{{ destination_folder }}" -y -mmt
+  when: sinequa_needs_upgrade
+
+# ------------------------------------------------------------------
+# Start services
+# ------------------------------------------------------------------
+
+- name: Start Sinequa service
+  ansible.windows.win_service:
+    name: "{{ sinequa_service_name }}"
+    state: started
+    start_mode: auto
+
+# ------------------------------------------------------------------
+# Post-upgrade sanity log
+# ------------------------------------------------------------------
+
+- name: Log upgrade completion
+  ansible.builtin.debug:
+    msg: >-
+      Sinequa upgrade to version {{ sinequa_version }} completed.

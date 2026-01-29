@@ -1,0 +1,208 @@
+---
+# roles/sinequa/tasks/prereqs.yml
+
+- name: Ensure temporary directory exists
+  ansible.windows.win_file:
+    path: "{{ temp_folder }}"
+    state: directory
+
+# ------------------------------------------------------------------
+# BGInfo
+# ------------------------------------------------------------------
+
+- name: Ensure BGInfo install directory exists
+  ansible.windows.win_file:
+    path: "{{ bginfo_install_dir }}"
+    state: directory
+
+- name: Check if BGInfo is installed
+  ansible.windows.win_stat:
+    path: '{{ bginfo_install_dir }}\Bginfo.exe'
+  register: bginfo_stat
+
+- name: Set fact if BGInfo is installed
+  ansible.builtin.set_fact:
+    bginfo_installed: "{{ bginfo_stat.stat.exists }}"
+
+- name: Download BGInfo package
+  ansible.windows.win_get_url:
+    url: "{{ bginfo_url }}"
+    dest: "{{ bginfo_install_dir }}\\Bginfo.exe"
+  when: not bginfo_installed 
+
+- name: Copy BGInfo from temp to installation folder
+  ansible.windows.win_copy:
+    src: "{{ role_path }}/files/config.bgi"
+    dest: "{{ bginfo_install_dir }}\\Bginfo.exe"
+
+- name: Copy custom BGInfo
+  ansible.windows.win_copy:
+    src: "{{ role_path }}/files/config.bgi"
+    dest: "{{ bginfo_install_dir }}\\config.bgi"
+
+- name: Ensure BgInfo autostarts at login
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+    name: BgInfo
+    data: '"C:\Program Files\BgInfo\Bginfo.exe" "C:\Program Files\BgInfo\config.bgi" /timer:0 /nolicprompt'
+    type: string
+    state: present
+
+# ------------------------------------------------------------------
+# NuGet (Only for dev environments)
+# ------------------------------------------------------------------
+
+#- name: Ensure NuGet PackageProvider 2.8.5.208 is installed
+#  ansible.windows.win_powershell:
+#    script: |
+#      $provider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+#
+#      if (-not $provider -or $provider.Version -lt [version]'2.8.5.208') {
+#        Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.208 -Force
+#        $Ansible.Changed = $true
+#      }
+#      else{
+#        $Ansible.Changed = $false
+#      }
+
+
+# ------------------------------------------------------------------
+# Visual C++ Redistributable (Sinequa prerequisite, not longer required)
+# ------------------------------------------------------------------
+
+#- name: Download VC++ 2015-2022 Redistributable (x64)
+#  ansible.windows.win_get_url:
+#    url: "{{ vc_redist_url }}"
+#    dest: "{{ temp_folder }}\\vc_redist.x64.exe"
+#    force: false
+
+#- name: Install VC++ 2015-2022 Redistributable (x64)
+#  ansible.windows.win_package:
+#    path: "{{ temp_folder }}\\vc_redist.x64.exe"
+#    arguments: /install /quiet /norestart
+#    state: present
+#    creates_path: "C:\\Windows\\System32\\vcruntime140.dll"
+
+# ------------------------------------------------------------------
+# 7-Zip (used for extracting Sinequa packages)
+# ------------------------------------------------------------------
+
+- name: Check if 7-Zip is installed
+  ansible.windows.win_stat:
+    path: "C:\\Program Files\\7-Zip\\7z.exe"
+  register: sevenzip_bin
+
+- name: Download 7-Zip
+  ansible.windows.win_get_url:
+    url: "{{ sevenzip_url }}"
+    dest: "{{ temp_folder }}\\7zsetup.exe"
+    force: false
+
+- name: Install 7zip
+  ansible.windows.win_package:
+    path: "{{ temp_folder }}\\7zsetup.exe"
+    arguments: /S
+    creates_path: C:\Program Files\7-Zip\7z.exe
+    state: present
+
+# ------------------------------------------------------------------
+# Common firewall rules
+# ------------------------------------------------------------------
+
+- name: Ensure Common Sinequa firewall ports are open
+  community.windows.win_firewall_rule:
+    name: "Sinequa Common - TCP {{ item }}"
+    group: "Sinequa"
+    localport: "{{ item }}"
+    protocol: TCP
+    direction: in
+    action: Allow
+    enabled: true
+    state: present
+  loop: "{{ sinequa_common_firewall_ports }}"
+
+# ------------------------------------------------------------------
+# Environment variables
+# ------------------------------------------------------------------
+
+- name: Ensure Sinequa environment variable is set
+  ansible.windows.win_environment:
+    state: present
+    name: SINEQUA_TEMP
+    value: "{{ sinequa_temp_dir }}"
+    level: machine
+
+# ------------------------------------------------------------------
+# PATH extension
+# ------------------------------------------------------------------
+
+- name: Add required PATH entries
+  ansible.windows.win_path:
+    elements:
+      - "{{ sinequa_install_root }}\\programs\\win\\node\\20.14.0"
+      - C:\Windows\system32
+      - C:\Windows
+      - C:\Windows\System32\Wbem
+      - C:\Windows\System32\WindowsPowerShell\v1.0
+      - C:\Program Files\7-Zip
+      - C:\Windows\System32\OpenSSH
+      - C:\Program Files\Microsoft VS Code\bin
+      - C:\Program Files\Git\cmd
+      - C:\Program Files\PowerShell\7
+      - C:\ProgramData\chocolatey\bin
+      - "{{ sinequa_install_root }}\\bin"
+    scope: machine
+    state: present
+
+# ------------------------------------------------------------------
+# Policy mgmt
+# ------------------------------------------------------------------
+
+#- name: Disable FIPS compliant algorithms requirement
+#  ansible.windows.win_regedit:
+#    path: HKLM:\System\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy
+#    name: Enabled
+#    data: 0
+#    type: dword
+#    state: present
+
+- name: Disable Network Level Authentication (NLA)
+  ansible.windows.win_regedit:
+    path: HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp
+    name: UserAuthentication
+    data: 0
+    type: dword
+    state: present
+
+- name: Optimize Windows for Background Service Performance
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl
+    name: Win32PrioritySeparation
+    data: 24
+    type: dword
+    state: present
+  notify: Reboot Node
+
+# ------------------------------------------------------------------
+# NVIDIA Drivers
+# ------------------------------------------------------------------
+
+#- name: Download NVIDIA Driver
+#  ansible.windows.win_get_url:
+#    url: "{{ nvidia_driver_url }}"
+#    path: "{{ sinequa_temp_dir }}\\nvidia_driver_setup.exe"
+#    timeout: 600  # Drivers are large; allow 10 minutes
+
+#- name: Install NVIDIA Driver Silently
+#  ansible.windows.win_package:
+#    path: "{{ nvidia_driver_dest }}"
+#    # /s = silent, /n = no reboot (handled by Ansible), /noeula = accept EULA
+#    arguments: "/s /n /noeula"
+#    state: present
+#    # Change this to match the name in "Add/Remove Programs" to make the task idempotent
+#    product_id: "NVIDIA Graphics Driver"
+#  register: install_result
+
+#- name: Reboot if driver installation requires it
+#  ansible.windows.win_reboot:
+#  when: install_result.reboot_required or install_result.changed

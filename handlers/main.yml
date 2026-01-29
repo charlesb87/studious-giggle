@@ -1,0 +1,5 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for sse.sinequa
+  - name: Reboot Node
+    ansible.windows.win_reboot:

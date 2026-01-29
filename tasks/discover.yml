@@ -1,0 +1,89 @@
+---
+# roles/sinequa/tasks/discover.yml
+# Read-only discovery of current state. No changes should be made here.
+
+- name: Check if Sinequa install root exists
+  ansible.windows.win_stat:
+    path: "{{ sinequa_install_root }}"
+  register: sinequa_install_root_stat
+
+- name: Check for Sinequa version file
+  ansible.windows.win_stat:
+    path: "{{ sinequa_install_root }}\\version.txt"
+  register: sinequa_version_file_stat
+
+- name: Read installed version from version file (if present)
+  ansible.windows.slurp:
+    path: "{{ sinequa_install_root }}\\version.txt"
+  register: sinequa_version_file_content
+  when: sinequa_version_file_stat.stat.exists
+
+- name: Set discovery facts (install + version)
+  ansible.builtin.set_fact:
+    sinequa_installed: >-
+      {{
+        (sinequa_install_root_stat.stat.exists | default(false))
+        and (sinequa_version_file_stat.stat.exists | default(false))
+      }}
+    sinequa_current_version: >-
+      {{
+        (
+          sinequa_version_file_content.content
+          | default('')
+          | b64decode
+          | regex_search('^.*(?=\sWindows)')
+        )
+        if (sinequa_version_file_stat.stat.exists | default(false))
+        else ''
+      }}
+
+
+# Service discovery: existence + state
+- name: Query Sinequa service
+  ansible.windows.win_service_info:
+    name: "{{ sinequa_service_name }}"
+  register: sinequa_service_info
+  failed_when: false
+
+- name: Set service discovery facts
+  ansible.builtin.set_fact:
+    sinequa_service_exists: "{{ (sinequa_service_info.services | default([])) | length > 0 }}"
+    sinequa_service_state: >-
+      {{
+        (sinequa_service_info.services[0].state)
+        if ((sinequa_service_info.services | default([])) | length > 0)
+        else 'absent'
+      }}
+
+# Optional: compute compliance/required action based on desired version
+- name: Compute desired action facts
+  ansible.builtin.set_fact:
+    sinequa_needs_install: "{{ not sinequa_installed }}"
+    sinequa_needs_upgrade: >-
+      {{
+        sinequa_installed
+        and (sinequa_current_version | length > 0)
+        and (sinequa_current_version is version(sinequa_version, '<'))
+      }}
+    sinequa_is_compliant: >-
+      {{
+        sinequa_installed
+        and (sinequa_current_version | length > 0)
+        and (sinequa_current_version is version(sinequa_version, '=='))
+      }}
+
+- name: Debug discovery summary
+  ansible.builtin.debug:
+    msg:
+      installed: "{{ sinequa_installed }}"
+      current_version: "{{ sinequa_current_version }}"
+      target_version: "{{ sinequa_version }}"
+      service_exists: "{{ sinequa_service_exists }}"
+      service_state: "{{ sinequa_service_state }}"
+      needs_install: "{{ sinequa_needs_install }}"
+      needs_upgrade: "{{ sinequa_needs_upgrade }}"
+      compliant: "{{ sinequa_is_compliant }}"
+
+- name: Stop the play gracefully if Sinequa is compliant
+  meta: end_play
+  when: sinequa_is_compliant

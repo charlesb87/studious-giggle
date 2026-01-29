@@ -1,0 +1,43 @@
+vc_redist_url: https://aka.ms/vs/16/release/vc_redist.x64.exe
+
+sevenzip_url: https://www.7-zip.org/a/7z2501-x64.exe
+
+gitextensions_url: https://github.com/gitextensions/gitextensions/releases/download/v6.0.5/GitExtensions-arm64-6.0.5.60-4463586.msi
+gitextensions_path: "{{ install_dir }}\\GitExtensions.msi"
+
+nvidia_driver_url: "https://us.download.nvidia.com/Windows/552.74/552.74-winserv-2019-2022-64bit-datacentre-dch-whql.exe"
+nvidia_driver_dest: "C:\\temp\\nvidia_driver_setup.exe"
+
+temp_folder: "C:\\Temp\\"
+destination_folder: 'C:\'
+sinequa_install_root: "{{ destination_folder }}Sinequa"
+version_file: "{{ sinequa_install_root }}\\version.txt"
+sinequa_service_name: "sinequa.service"
+
+bginfo_install_dir: "C:\\Program Files\\BGInfo"
+bginfo_url: "https://live.sysinternals.com/Bginfo.exe"
+
+sinequa_release_download_url: "https://download.sinequa.com/api/filedownload?type=release&version={{ sinequa_version }}&file=sinequa.11.zip"
+
+sinequa_download_headers:
+  Accept: application/octet-stream
+  Authorization: "Bearer {{ sinequa_download_token }}"
+
+service_name: sinequa.service
+
+sinequa_temp_dir: "D:\\sinequa\\temp"
+
+sinequa_common_firewall_ports:
+- 10301
+
+sinequa_webapp_firewall_ports:
+- 443
+
+sinequa_engine_firewall_ports:
+- 10300
+
+sinequa_indexer_firewall_ports:
+- 13002
+
+sinequa_queue_cluster_ports:
+- 10303

@@ -1,0 +1,15 @@
+# ------------------------------------------------------------------
+# Specific Queue cluster firewall rules
+# ------------------------------------------------------------------
+
+- name: Ensure Queue cluster Sinequa firewall ports are open
+  community.windows.win_firewall_rule:
+    name: "Sinequa Queue cluster - TCP {{ item }}"
+    group: "Sinequa"
+    localport: "{{ item }}"
+    protocol: TCP
+    direction: in
+    action: Allow
+    enabled: true
+    state: present
+  loop: "{{ sinequa_queue_cluster_ports }}"

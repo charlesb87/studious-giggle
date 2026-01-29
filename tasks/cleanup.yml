@@ -1,0 +1,9 @@
+- name: Remove SBA v1 resources
+  ansible.windows.win_file:
+    path: "{{ sinequa_install_root }}\\assets\\static\\static_resources_sba1.zxb"
+    state: absent
+
+- name: Remove temporary folder
+  ansible.windows.win_file:
+    path: "{{ temp_folder }}"
+    state: absent

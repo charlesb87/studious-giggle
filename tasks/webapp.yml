@@ -1,0 +1,15 @@
+# ------------------------------------------------------------------
+# Specific Webapp firewall rules
+# ------------------------------------------------------------------
+
+- name: Ensure Webapp Sinequa firewall ports are open
+  community.windows.win_firewall_rule:
+    name: "Sinequa Webapp - TCP {{ item }}"
+    group: "Sinequa"
+    localport: "{{ item }}"
+    protocol: TCP
+    direction: in
+    action: Allow
+    enabled: true
+    state: present
+  loop: "{{ sinequa_webapp_firewall_ports }}"

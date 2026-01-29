@@ -1,0 +1,6 @@
+- name: Download Sinequa distribution
+  ansible.windows.win_get_url:
+    url: "{{ sinequa_release_download_url }}"
+    dest: "{{ temp_folder }}\\sinequa.zip"
+    headers: "{{ sinequa_download_headers }}"
+    force: true

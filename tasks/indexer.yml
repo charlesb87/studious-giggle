@@ -1,0 +1,15 @@
+# ------------------------------------------------------------------
+# Specific Indexe firewall rules
+# ------------------------------------------------------------------
+
+- name: Ensure Indexer Sinequa firewall ports are open
+  community.windows.win_firewall_rule:
+    name: "Sinequa Indexer - TCP {{ item }}"
+    group: "Sinequa"
+    localport: "{{ item }}"
+    protocol: TCP
+    direction: in
+    action: Allow
+    enabled: true
+    state: present
+  loop: "{{ sinequa_indexer_firewall_ports }}"

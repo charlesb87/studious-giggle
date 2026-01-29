@@ -1,0 +1,34 @@
+
+- import_tasks: discover.yml
+
+- import_tasks: prereqs.yml
+
+- import_tasks: download.yml
+
+- import_tasks: install.yml
+  when: sinequa_action == 'install'
+
+- import_tasks: upgrade.yml
+  when: sinequa_action == 'upgrade'
+
+- name: Include common webengine specific tasks
+  include_tasks: webengine.yml
+  when: "'webengine' in group_names"
+
+- name: Include webapp specific tasks
+  include_tasks: webapp.yml
+  when: "'webapp' in group_names"
+
+- name: Include engine specific tasks
+  include_tasks: engine.yml
+  when: "'engine' in group_names"
+
+- name: Include indexer specific tasks
+  include_tasks: indexer.yml
+  when: "'indexer' in group_names"
+
+- name: Include queue cluster specific tasks
+  include_tasks: queuecluster.yml
+  when: "'queuecluster' in group_names"
+
+- import_tasks: cleanup.yml

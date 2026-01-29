@@ -1,0 +1,19 @@
+# roles/sinequa/tasks/prereqs.yml
+- name: Extract archive
+  ansible.windows.win_command: >
+    7z.exe x "{{ temp_folder }}sinequa.zip" -o"{{ destination_folder }}" -y -mmt
+  when: sinequa_needs_install
+
+- name: Create Sinequa Windows service
+  ansible.windows.win_service:
+    name: "{{ service_name }}"
+    display_name: "{{ service_name }}"
+    path: "{{ sinequa_install_root }}\\bin\\sinequa.service.exe"
+    start_mode: auto
+    state: stopped
+    username: "NT AUTHORITY\\NetworkService"
+
+- name: Remove Local-Appdata folder
+  ansible.windows.win_file:
+    path: "{{ sinequa_install_root }}\\local-data"
+    state: absent

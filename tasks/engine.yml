@@ -1,0 +1,15 @@
+# ------------------------------------------------------------------
+# Specific Engine firewall rules
+# ------------------------------------------------------------------
+
+- name: Ensure Engine Sinequa firewall ports are open
+  community.windows.win_firewall_rule:
+    name: "Sinequa Engine - TCP {{ item }}"
+    group: "Sinequa"
+    localport: "{{ item }}"
+    protocol: TCP
+    direction: in
+    action: Allow
+    enabled: true
+    state: present
+  loop: "{{ sinequa_engine_firewall_ports }}"
