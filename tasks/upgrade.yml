@@ -41,22 +41,22 @@
   when: sinequa_installed
 
 # ------------------------------------------------------------------
-# Clean-up
+# Clean-up (Not requiered as per Sinequa Documentation)
 # ------------------------------------------------------------------
 
-- name: Remove Sinequa Install root folder
-  ansible.windows.win_file:
-    path: "{{ sinequa_install_root }}"
-    state: absent
-  when: sinequa_installed
+#- name: Remove Sinequa Install root folder
+#  ansible.windows.win_file:
+#    path: "{{ sinequa_install_root }}"
+#    state: absent
+#  when: sinequa_installed
 
 # ------------------------------------------------------------------
-# Deploy new binaries
+# Deploy new binaries, and overwrite existing files 
 # ------------------------------------------------------------------
 
 - name: Extract archive
   ansible.windows.win_command: >
-    7z.exe x "{{ temp_folder }}sinequa.zip" -o"{{ destination_folder }}" -y -mmt
+    7z.exe x "{{ temp_folder }}sinequa.zip" -o"{{ destination_folder }}" -y -mmt -aoa
   when: sinequa_needs_upgrade
 
 # ------------------------------------------------------------------
