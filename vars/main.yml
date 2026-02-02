@@ -37,7 +37,7 @@ sinequa_engine_firewall_ports:
 - 10300
 
 sinequa_indexer_firewall_ports:
-- 13002
+- 10302
 
 sinequa_queue_cluster_ports:
 - 10303
