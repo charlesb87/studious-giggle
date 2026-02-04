@@ -4,11 +4,6 @@
     7z.exe x "{{ temp_folder }}sinequa.zip" -o"{{ destination_folder }}" -y -mmt
   when: sinequa_needs_install
 
-- name: Sinequa Installation (Using SCMD)
-  ansible.windows.win_command: >
-    scmd install 
-  when: sinequa_needs_install
-
 # ------------------------------------------------------------------
 # Windows Service Installation, not longer required with scmd
 # ------------------------------------------------------------------
