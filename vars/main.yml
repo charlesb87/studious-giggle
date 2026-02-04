@@ -23,7 +23,7 @@ sinequa_download_headers:
   Accept: application/octet-stream
   Authorization: "Bearer {{ sinequa_download_token }}"
 
-service_name: sinequa.service
+#service_name: sinequa.service
 
 sinequa_temp_dir: "D:\\sinequa\\temp"
 

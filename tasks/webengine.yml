@@ -1,5 +1,0 @@
-- name: Generate sinequa.xml
-  ansible.windows.win_template:
-    src: sinequa.xml.j2
-    dest: C:\sinequa\sinequa.xml
-    encoding: utf-8
