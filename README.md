@@ -117,14 +117,6 @@ These are opened inbound (TCP) using `community.windows.win_firewall_rule`:
 | `sinequa_indexer_firewall_ports` | `[13002]` | `indexer` group |
 | `sinequa_queue_cluster_ports` | `[10303]` | `queuecluster` group |
 
-### Template variables (required for `webengine`)
-
-`templates/sinequa.xml.j2` requires:
-
-| Variable | Required | Description |
-|---|:---:|---|
-| `sinequa_node_name` | ✅ | Value for `<NodeName>` |
-| `sinequa_webapp_name` | ✅ | Value for `<WebAppName>` |
 
 ## Example playbook
 
