@@ -2,7 +2,7 @@
 
 DevOps - Sinequa lifecycle automation (install/upgrade) on Windows
 
-This role supports **install** and **upgrade** workflows for Sinequa on Windows hosts, with optional per-node configuration driven by inventory groups (e.g. `webengine`, `webapp`, `engine`, `indexer`, `queuecluster`).
+This role supports **install** and **upgrade** workflows for Sinequa on Windows hosts, with optional per-node configuration driven by inventory groups (e.g. `webapp`, `engine`, `indexer`, `queuecluster`).
 
 ## Supported platforms
 
@@ -28,7 +28,8 @@ Declared in `requirements.yml`:
 
 ### Target host prerequisites
 
-- The role uses **7-Zip** (`7z.exe`) to extract the Sinequa archive. Ensure 7-Zip is installed and available in PATH (the role also adds `C:\Program Files\7-Zip` to the machine PATH).
+- The role uses 7-Zip (7z.exe) to extract the Sinequa archive. The playbook handles the installation because the Ansible module community.windows.win_unzip proved to be significantly slower and, in some cases, failed during extraction of large archives.
+
 
 ## Role behavior
 
@@ -41,7 +42,6 @@ At a high level, the role:
    - **Install** (`tasks/install.yml`) when `sinequa_action: install`
    - **Upgrade** (`tasks/upgrade.yml`) when `sinequa_action: upgrade`
 5. Applies **group-specific** configuration:
-   - `webengine` → renders `sinequa.xml` (`tasks/webengine.yml`)
    - `webapp` → webapp firewall ports (`tasks/webapp.yml`)
    - `engine` → engine firewall ports (`tasks/engine.yml`)
    - `indexer` → indexer firewall ports (`tasks/indexer.yml`)
@@ -52,7 +52,6 @@ At a high level, the role:
 
 Add hosts to these groups to enable group-specific tasks:
 
-- `webengine`
 - `webapp`
 - `engine`
 - `indexer`
@@ -61,9 +60,6 @@ Add hosts to these groups to enable group-specific tasks:
 Example inventory snippet:
 
 ```ini
-[webengine]
-win-webengine-01
-
 [webapp]
 win-webapp-01
 
