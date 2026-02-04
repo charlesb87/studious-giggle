@@ -14,7 +14,7 @@
     state: present
   loop: "{{ sinequa_indexer_firewall_ports }}"
 
-  - name: Sinequa Installation (Using SCMD) of service only
+- name: Sinequa Installation (Using SCMD) of service only
   ansible.windows.win_command: >
     scmd InstallService
   when: sinequa_needs_install
