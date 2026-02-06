@@ -14,7 +14,7 @@
     state: present
   loop: "{{ sinequa_webapp_firewall_ports }}"
 
-- name: Sinequa Installation (Using SCMD)
+- name: Sinequa Default WebApp installation
   ansible.windows.win_command: >
-    scmd install 
+    scmd InstallDefaultWebapp --type=netcorekestrel --name=webappname --httpport=80
   when: sinequa_needs_install
