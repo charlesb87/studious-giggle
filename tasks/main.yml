@@ -11,10 +11,6 @@
 - import_tasks: upgrade.yml
   when: sinequa_action == 'upgrade'
 
-- name: Include common webengine specific tasks
-  include_tasks: webengine.yml
-  when: "'webengine' in group_names"
-
 - name: Include webapp specific tasks
   include_tasks: webapp.yml
   when: "'webapp' in group_names"
