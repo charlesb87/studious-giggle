@@ -17,6 +17,11 @@
 #    state: stopped
 #    username: "NT AUTHORITY\\NetworkService"
 
+- name: Sinequa Installation (Using SCMD) of service only
+  ansible.windows.win_command: >
+    scmd InstallService
+  when: sinequa_needs_install
+
 - name: Remove Local-Appdata folder
   ansible.windows.win_file:
     path: "{{ sinequa_install_root }}\\local-data"
